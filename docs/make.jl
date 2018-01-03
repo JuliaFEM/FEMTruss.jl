@@ -12,4 +12,5 @@ makedocs(modules=[FEMTruss],
          sitename = "FEMTruss.jl",
          pages = [
                   "Introduction" => "index.md",
+                  "API documentation" => "api.md"
                  ])
