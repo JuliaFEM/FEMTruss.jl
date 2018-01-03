@@ -1,0 +1,3 @@
+[![Build Status](https://travis-ci.org/JuliaFEM/FEMTruss.jl.svg?branch=master)](https://travis-ci.org/JuliaFEM/FEMTruss.jl)[![Coverage Status](https://coveralls.io/repos/github/JuliaFEM/FEMTruss.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaFEM/FEMTruss.jl?branch=master)[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliafem.github.io/FEMTruss.jl/stable)[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://juliafem.github.io/FEMTruss.jl/latest)[![Issues](https://img.shields.io/github/issues/JuliaFEM/FEMTruss.jl.svg)](https://github.com/JuliaFEM/FEMTruss.jl/issues)
+
+Truss implementation for JuliaFEM.
