@@ -38,14 +38,43 @@ function assemble!(assembly::Assembly, problem::Problem{Truss},
     ndim = get_unknown_field_dimension(problem)
     ndofs = nnodes*ndim
     K = zeros(ndofs,ndofs)
-    for ip in get_integration_points(element)
-        dN = element(ip, time, Val{:Grad})
-        detJ = element(ip, time, Val{:detJ})
-        A = element("cross section area", ip, time)
-        E = element("youngs modulus", ip, time)
-        K += ip.weight*E*A*dN'*dN*detJ
+    node_id1 = element.connectivity[1] #First node in element
+    node_id2 = element.connectivity[2] #second node in elements
+    pos = element("geometry")
+    dl = pos[node_id2]-pos[node_id1];
+    l = sqrt(dot(dl,dl));
+    # Do the local element for calculations
+    loc_elem = Element(Seg2, [1,2])
+    loc_elem.id=-1 # To signal it is local
+    X = Dict{Int64, Vector{Float64}}(
+        1 => [0.0],
+        2 => [l])
+    update!(loc_elem, "geometry", X)
+    update!(loc_elem, "youngs modulus", element("youngs modulus"))
+    update!(loc_elem, "cross section area", element("cross section area"))
+    K_loc = zeros(nnodes, nnodes)
+    for ip in get_integration_points(loc_elem)
+        dN = loc_elem(ip, time, Val{:Grad})
+        detJ = loc_elem(ip, time, Val{:detJ})
+        A = loc_elem("cross section area", ip, time)
+        E = loc_elem("youngs modulus", ip, time)
+        K_loc += ip.weight*E*A*dN'*dN*detJ
     end
-    # How do we transform to the global system for 2d/3D
+    # Should we keep the local transform
+    if ndim == 1
+        K = K_loc
+    elseif ndim == 2
+        l_theta = dl[1]/l
+        m_theta = dl[2]/l
+        L = [l_theta m_theta 0 0; 0 0 l_theta m_theta]
+        K = L'*K_loc*L
+    else # All three dimensions
+        l_theta = dl[1]/l
+        m_theta = dl[2]/l
+        n_theta = dl[3]/l
+        L = [l_theta m_theta n_theta 0 0 0; 0 0 0 l_theta m_theta n_theta]
+        K = L'*K_loc*L
+    end
 
     gdofs = get_gdofs(problem, element)
     add!(assembly.K, gdofs, gdofs, K)
