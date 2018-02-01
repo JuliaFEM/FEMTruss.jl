@@ -29,6 +29,15 @@ K_oracle_base =  [2.88 -2.88;-2.88 2.88]
 X = [(1 , [0.0]),(2, [10.0])]
 ndofs = length(X[1][2])
 p1 = make_test_problem(X, ndofs)
+
+@test get_unknown_field_name(p1)=="displacement"
+
+#This one fails
+#Test threw an exception of type UndefVarError
+#  Expression: get_formulation_type(p1)
+#  UndefVarError: get_formulation_type not defined
+#@test get_formulation_type(p1)
+
 K_truss = full(p1.assembly.K)
 K_oracle =  K_oracle_base
 @test isapprox(K_truss, K_oracle)
