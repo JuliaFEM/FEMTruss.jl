@@ -94,3 +94,20 @@ K_oracle = trans'*K_oracle_base*trans
 @test isapprox(K_truss, K_oracle)
 
 end
+
+@testset "test nodal elements" begin
+    element = Element(Poi1, [1])
+    update!(element, "fixed displacement 1", 1.0)
+    update!(element, "nodal force 2", 2.0)
+    problem = Problem(Truss, "test problem", 2)
+    add_elements!(problem, [element])
+    assemble!(problem, 0.0)
+    C1 = full(problem.assembly.C1, 2, 2)
+    C2 = full(problem.assembly.C2, 2, 2)
+    f = full(problem.assembly.f, 2, 1)
+    g = full(problem.assembly.g, 2, 1)
+    @test isapprox(C1, [1.0 0.0; 0.0 0.0])
+    @test isapprox(C1, C2)
+    @test isapprox(f, [0.0, 2.0])
+    @test isapprox(g, [1.0, 0.0])
+end
