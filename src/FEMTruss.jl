@@ -12,6 +12,12 @@ import FEMBase: get_unknown_field_name,
 
 """
 This truss fromulation is from
+
+# Features
+- Nodal forces can be set using element `Poi1` with field
+  `nodal force i`, where `i` is dof number.
+- Displacements can be fixed using element `Poi1` with field
+  `fixed displacement i`, where `i` is dof number.
 """
 type Truss <: FieldProblem
 end
@@ -21,7 +27,7 @@ function get_unknown_field_name(::Problem{Truss})
 end
 
 function get_formulation_type(::Problem{Truss})
-    return :incremental
+    return :total
 end
 
 """
@@ -79,6 +85,36 @@ function assemble!(assembly::Assembly, problem::Problem{Truss},
     gdofs = get_gdofs(problem, element)
     add!(assembly.K, gdofs, gdofs, K)
     #add!(assembly.f, gdofs, f)
+end
+
+import FEMBase: assemble_elements!
+
+function assemble_elements!(problem::Problem, assembly::Assembly,
+                            elements::Vector{Element{Poi1}}, time::Float64)
+    dim = ndofs = get_unknown_field_dimension(problem)
+    Ce = zeros(ndofs,ndofs)
+    ge = zeros(ndofs)
+    fe = zeros(ndofs)
+    for element in elements
+        fill!(Ce, 0.0)
+        fill!(ge, 0.0)
+        fill!(fe, 0.0)
+        ip = (0.0,)
+        for i=1:dim
+            if haskey(element, "fixed displacement $i")
+                Ce[i,i] = 1.0
+                ge[i] = element("fixed displacement $i", ip, time)
+            end
+            if haskey(element, "nodal force $i")
+                fe[i] = element("nodal force $i", ip, time)
+            end
+        end
+        gdofs = get_gdofs(problem, element)
+        add!(assembly.C1, gdofs, gdofs, Ce)
+        add!(assembly.C2, gdofs, gdofs, Ce)
+        add!(assembly.g, gdofs, ge)
+        add!(assembly.f, gdofs, fe)
+    end
 end
 
 export Truss
