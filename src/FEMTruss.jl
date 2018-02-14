@@ -21,7 +21,7 @@ function get_unknown_field_name(::Problem{Truss})
 end
 
 function get_formulation_type(::Problem{Truss})
-    return :incremental
+    return :total
 end
 
 """

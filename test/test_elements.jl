@@ -3,6 +3,7 @@
 
 using FEMBase
 using FEMTruss
+using FEMBase: get_formulation_type
 
 using Base.Test
 # thsi is the same for all tests testing K and orientation
@@ -36,7 +37,7 @@ p1 = make_test_problem(X, ndofs)
 #Test threw an exception of type UndefVarError
 #  Expression: get_formulation_type(p1)
 #  UndefVarError: get_formulation_type not defined
-#@test get_formulation_type(p1)
+@test get_formulation_type(p1) == :total
 
 K_truss = full(p1.assembly.K)
 K_oracle =  K_oracle_base
