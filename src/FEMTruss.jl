@@ -12,6 +12,15 @@ import FEMBase: get_unknown_field_name,
 
 """
 This truss fromulation is from
+Concepts and applications of finite element analysis, forth edition
+Chapter 2.4
+Cook, Malkus, Plesha, Witt
+
+# Features
+- Nodal forces can be set using element `Poi1` with field
+  `nodal force i`, where `i` is dof number.
+- Displacements can be fixed using element `Poi1` with field
+  `fixed displacement i`, where `i` is dof number.
 """
 type Truss <: FieldProblem
 end
@@ -21,23 +30,20 @@ function get_unknown_field_name(::Problem{Truss})
 end
 
 function get_formulation_type(::Problem{Truss})
-    return :incremental
+    return :total
 end
 
 """
-    assemble!(assembly:Assembly, problem::Problem{Elasticity}, elements, time)
-Start finite element assembly procedure for Elasticity problem.
-Function groups elements to arrays by their type and assembles one element type
-at time. This makes it possible to pre-allocate matrices common to same type
-of elements.
+   get_K_and_T(element::Element{Seg2}, nnodes, ndim, time)
+   This function assembles the local stiffness and transformation matrix
+   Need this to find element forces later on
+   Will need to change allocation strategy to pre-allocation later
+   Can discuss if we really need nnodes, since that is always 2 for trusses
 """
-function assemble!(assembly::Assembly, problem::Problem{Truss},
-                   element::Element{Seg2}, time)
-    #Require that the number of nodes = 2 ?
-    nnodes = length(element)
-    ndim = get_unknown_field_dimension(problem)
+function get_K_and_T(element::Element{Seg2}, nnodes, ndim, time)
     ndofs = nnodes*ndim
     K = zeros(ndofs,ndofs)
+    T = zeros(2, ndofs*2)
     node_id1 = element.connectivity[1] #First node in element
     node_id2 = element.connectivity[2] #second node in elements
     pos = element("geometry")
@@ -60,25 +66,70 @@ function assemble!(assembly::Assembly, problem::Problem{Truss},
         E = loc_elem("youngs modulus", ip, time)
         K_loc += ip.weight*E*A*dN'*dN*detJ
     end
-    # Should we keep the local transform
+
     if ndim == 1
         K = K_loc
     elseif ndim == 2
         l_theta = dl[1]/l
         m_theta = dl[2]/l
-        L = [l_theta m_theta 0 0; 0 0 l_theta m_theta]
-        K = L'*K_loc*L
+        T = [l_theta m_theta 0 0; 0 0 l_theta m_theta]
+        K = T'*K_loc*T
     else # All three dimensions
         l_theta = dl[1]/l
         m_theta = dl[2]/l
         n_theta = dl[3]/l
-        L = [l_theta m_theta n_theta 0 0 0; 0 0 0 l_theta m_theta n_theta]
-        K = L'*K_loc*L
+        T = [l_theta m_theta n_theta 0 0 0; 0 0 0 l_theta m_theta n_theta]
+        K = T'*K_loc*T
     end
+    return (K,T)
+end
 
+"""
+    assemble!(assembly:Assembly, problem::Problem{Elasticity}, elements, time)
+Start finite element assembly procedure for Elasticity problem.
+Function groups elements to arrays by their type and assembles one element type
+at time. This makes it possible to pre-allocate matrices common to same type
+of elements.
+"""
+function assemble!(assembly::Assembly, problem::Problem{Truss},
+                   element::Element{Seg2}, time)
+    #Require that the number of nodes = 2 ?
+    nnodes = length(element)
+    ndim = get_unknown_field_dimension(problem)
+    K,T = get_K_and_T(element, nnodes, ndim, time)
     gdofs = get_gdofs(problem, element)
     add!(assembly.K, gdofs, gdofs, K)
     #add!(assembly.f, gdofs, f)
+end
+
+import FEMBase: assemble_elements!
+
+function assemble_elements!(problem::Problem, assembly::Assembly,
+                            elements::Vector{Element{Poi1}}, time::Float64)
+    dim = ndofs = get_unknown_field_dimension(problem)
+    Ce = zeros(ndofs,ndofs)
+    ge = zeros(ndofs)
+    fe = zeros(ndofs)
+    for element in elements
+        fill!(Ce, 0.0)
+        fill!(ge, 0.0)
+        fill!(fe, 0.0)
+        ip = (0.0,)
+        for i=1:dim
+            if haskey(element, "fixed displacement $i")
+                Ce[i,i] = 1.0
+                ge[i] = element("fixed displacement $i", ip, time)
+            end
+            if haskey(element, "nodal force $i")
+                fe[i] = element("nodal force $i", ip, time)
+            end
+        end
+        gdofs = get_gdofs(problem, element)
+        add!(assembly.C1, gdofs, gdofs, Ce)
+        add!(assembly.C2, gdofs, gdofs, Ce)
+        add!(assembly.g, gdofs, ge)
+        add!(assembly.f, gdofs, fe)
+    end
 end
 
 export Truss
