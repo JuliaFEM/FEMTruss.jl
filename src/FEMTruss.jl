@@ -34,13 +34,14 @@ function get_formulation_type(::Problem{Truss})
 end
 
 """
-   get_K_and_T(element::Element{Seg2}, nnodes, ndim, time)
-   This function assembles the local stiffness and transformation matrix
-   Need this to find element forces later on
+   get_Kg_and_Tg(element::Element{Seg2}, nnodes, ndim, time)
+   This function assembles the local stiffness uses global transformation matrix
+   to make the global version of the local stiffnes matrix
+   Need these to find element forces later
    Will need to change allocation strategy to pre-allocation later
    Can discuss if we really need nnodes, since that is always 2 for trusses
 """
-function get_K_and_T(element::Element{Seg2}, nnodes, ndim, time)
+function get_Kg_and_Tg(element::Element{Seg2}, nnodes, ndim, time)
     ndofs = nnodes*ndim
     K = zeros(ndofs,ndofs)
     T = zeros(2, ndofs*2)
@@ -96,7 +97,7 @@ function assemble!(assembly::Assembly, problem::Problem{Truss},
     #Require that the number of nodes = 2 ?
     nnodes = length(element)
     ndim = get_unknown_field_dimension(problem)
-    K,T = get_K_and_T(element, nnodes, ndim, time)
+    K,T = get_Kg_and_Tg(element, nnodes, ndim, time)
     gdofs = get_gdofs(problem, element)
     add!(assembly.K, gdofs, gdofs, K)
     #add!(assembly.f, gdofs, f)
@@ -132,6 +133,6 @@ function assemble_elements!(problem::Problem, assembly::Assembly,
     end
 end
 
-export Truss
+export Truss, get_Kg_and_Tg
 
 end
