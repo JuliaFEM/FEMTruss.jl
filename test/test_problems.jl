@@ -65,8 +65,20 @@ using FEMTruss
     @test isapprox(full(ls.u), u_glob)
 
     # support forces
-    #println("K = ", full(ls.K))
-    #println("f = ", full(ls.f))
-    #println("u = ", full(ls.u))
-    println("la = ", full(ls.la))
+    support_forces = full(ls.K*ls.u)[1:4]
+    # This is the same as ls.la negated
+    # println("la = ", full(ls.la))
+    # The support forces from Sofistik
+    Rf = [-6.78823, -3.39411, -2.26274, 1.13137]
+    @test isapprox(support_forces, Rf, rtol=1e-5)
+    #find local truss Forces
+    K1,T1 = get_Kg_and_Tg(el1, 2,2, 0.0)
+    f_loc1 = T1*K1*ls.u[[1,2,5,6]] # No local forces her to add_elements
+    # both element forces should be stretch, item1 is negative
+    @test isapprox(-f_loc1[1], f_loc1[2])
+    @test isapprox(f_loc1[2], 7.58947, rtol=1e-5)
+    K2,T2 = get_Kg_and_Tg(el2, 2,2, 0.0)
+    f_loc2 = T2*K2*ls.u[3:6]
+    @test isapprox(-f_loc2[1], f_loc2[2])
+    @test isapprox(f_loc2[2], 2.52982,rtol=1e-5)
 end
