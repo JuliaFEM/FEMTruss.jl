@@ -41,19 +41,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api.html#FEMTruss.get_Kg_and_Tg-Tuple{FEMBase.Element{FEMBasis.Seg2},Any,Any,Any}",
+    "page": "API documentation",
+    "title": "FEMTruss.get_Kg_and_Tg",
+    "category": "Method",
+    "text": "get_Kg_and_Tg(element::Element{Seg2}, nnodes, ndim, time)    This function assembles the local stiffness uses global transformation matrix    to make the global version of the local stiffnes matrix    Need these to find element forces later    Will need to change allocation strategy to pre-allocation later    Can discuss if we really need nnodes, since that is always 2 for trusses\n\n\n\n"
+},
+
+{
     "location": "api.html#FEMBase.assemble!-Tuple{FEMBase.Assembly,FEMBase.Problem{FEMTruss.Truss},FEMBase.Element{FEMBasis.Seg2},Any}",
     "page": "API documentation",
     "title": "FEMBase.assemble!",
     "category": "Method",
     "text": "assemble!(assembly:Assembly, problem::Problem{Elasticity}, elements, time)\n\nStart finite element assembly procedure for Elasticity problem. Function groups elements to arrays by their type and assembles one element type at time. This makes it possible to pre-allocate matrices common to same type of elements.\n\n\n\n"
-},
-
-{
-    "location": "api.html#FEMTruss.get_K_and_T-Tuple{FEMBase.Element{FEMBasis.Seg2},Any,Any,Any}",
-    "page": "API documentation",
-    "title": "FEMTruss.get_K_and_T",
-    "category": "Method",
-    "text": "get_K_and_T(element::Element{Seg2}, nnodes, ndim, time)    This function assembles the local stiffness and transformation matrix    Need this to find element forces later on    Will need to change allocation strategy to pre-allocation later    Can discuss if we really need nnodes, since that is always 2 for trusses\n\n\n\n"
 },
 
 {
