@@ -8,6 +8,7 @@ const to = TimerOutput()
 test_files = String[]
 push!(test_files, "test_elements.jl")
 push!(test_files, "test_problems.jl")
+push!(test_files, "test_temperature.jl")
 
 @testset "FEMTruss.jl" begin
     for fn in test_files
