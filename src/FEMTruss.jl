@@ -24,7 +24,7 @@ Cook, Malkus, Plesha, Witt
 - Temperature loads can be set by setting field `thermal expansion coefficient`
   and field `temperature difference`
 """
-type Truss <: FieldProblem
+mutable struct Truss <: FieldProblem
 end
 
 function get_unknown_field_name(::Problem{Truss})
